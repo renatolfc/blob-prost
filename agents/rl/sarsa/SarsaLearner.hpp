@@ -15,6 +15,9 @@
 #endif
 #include <vector>
 #include <unordered_map>
+#include <iostream>
+#include <fstream>
+
 //#include <sparsehash/dense_hash_map>
 using namespace std;
 //using google::dense_hash_map;
