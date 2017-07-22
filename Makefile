@@ -7,13 +7,17 @@ ALE := ../../Arcade-Learning-Environment
 # Set this to 1 to enable SDL and display_screen
 USE_SDL     := 0
 
+ifeq ($(CLION_EXE_DIR),)
+	CLION_EXE_DIR := .
+endif
+
 # -O3 Optimize code (urns on all optimizations specified by -O2 and also turns on the -finline-functions, -funswitch-loops, -fpredictive-commoning, -fgcse-after-reload, -ftree-loop-vectorize, -ftree-slp-vectorize, -fvect-cost-model, -ftree-partial-pre and -fipa-cp-clone options).
 # -D__USE_SDL Ensures we can use SDL to see the game screen
 # -D_GNU_SOURCE=1 means the compiler will use the GNU standard of compilation, the superset of all other standards under GNU C libraries.
 # -D_REENTRANT causes the compiler to use thread safe (i.e. re-entrant) versions of several functions in the C library.
 FLAGS := -O3 -I$(ALE)/src -L$(ALE) -lale -lz
 CXX := g++ -std=c++11
-OUT_FILE := learner
+OUT_FILE := $(CLION_EXE_DIR)/learnerBlobTime
 # Search for library 'ale' and library 'z' when linking.
 LDFLAGS := -lale -lz -lm
 
@@ -22,9 +26,9 @@ ifeq ($(strip $(USE_SDL)), 1)
   LDFLAGS += -lSDL -lSDL_gfx -lSDL_image
 endif
 
-all: learnerBlobTime
+all: $(OUT_FILE)
 
-learnerBlobTime: bin/mainBlobTime.o bin/Mathematics.o bin/Parameters.o bin/Timer.o bin/Features.o bin/Background.o bin/BlobTimeFeatures.o bin/RLLearner.o bin/SarsaLearner.o
+$(OUT_FILE): bin/mainBlobTime.o bin/Mathematics.o bin/Parameters.o bin/Timer.o bin/Features.o bin/Background.o bin/BlobTimeFeatures.o bin/RLLearner.o bin/SarsaLearner.o
 	$(CXX) $(FLAGS) bin/mainBlobTime.o bin/Mathematics.o bin/Timer.o bin/Parameters.o bin/Features.o bin/Background.o bin/BlobTimeFeatures.o bin/RLLearner.o bin/SarsaLearner.o -o learnerBlobTime
 
 bin/mainBlobTime.o: mainBlobTime.cpp
@@ -57,7 +61,6 @@ bin/SarsaLearner.o: agents/rl/sarsa/SarsaLearner.cpp
 clean:
 	rm -rf ${OUT_FILE} bin/*.o
 	rm -f learner*
-	rm -f *.txt	
 
 
 #This command needs to be executed in a osX before running the code:
