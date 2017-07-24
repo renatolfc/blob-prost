@@ -43,6 +43,7 @@ private:
     int numColumns;                 //number of columns for feature representation
     int numColors;                  //colors to be considered in the feature representation of the screen
     int minimalAction;              //use only valid actions for the game or all the Atari legal actions
+    int fakeAle;                    //are we using the real or the fake ale interface?
     int useRewardSign;              //if set the rewards are defined as -1 and +1, ignoring scale
     int subtractBackground;         //whether the background should be removed when generating screen-based features
     int toSaveTrajectory;           //whether we will store a human player trajectory while he is playing a game
@@ -225,6 +226,7 @@ private:
      * @param learningLength number of frames to be learned in total, e.g. 50,000,000 (DQN).
      */
     void setLearningLength(int a);
+    void setIsFakeAle(int a);
     void setToSaveCheckPoint(int a);
     void setCheckPointName(std::string fileName);
     void setResolutions(std::string a);
@@ -332,6 +334,10 @@ public:
      */
     int isMinimalAction();
     /**
+     * @return int (representing bool) value read for FAKE_ALE parameter
+     */
+    int isFakeAle();
+    /**
      * @return double value read for TRACE_THRESHOLD parameter
      */
     double getTraceThreshold();
@@ -367,6 +373,7 @@ public:
      * @return int learningLength number of frames to be learned in total, e.g. 50,000,000 (DQN).
      */
     int getLearningLength();
+    int getFakeAle();
     int getToSaveCheckPoint();
     std::string getCheckPointName();
     

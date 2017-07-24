@@ -45,6 +45,7 @@ private:
     int randomNoOp;
     int noOpMax;
     int numStepsPerAction;
+    bool fakeAle;
     
     long long numGroups;
     

@@ -36,7 +36,10 @@ void Parameters::printHelp(char** argv){
     printf("   -t     %s[REQUIRED IF SAVE_TRAJECTORY = 1]%s path to file that will store the agent's trajectory.\n", ANSI_COLOR_RED, ANSI_COLOR_RESET);
     printf("   -w     If one wants to save intermediate weights, this is prefix to files that will store the agent's learned weights every FREQUENCY_SAVING episodes.\n");
     printf("   -l     If one wants to load an stored set of weights, this should contain the path to such file.\n");
-    printf("    -n    If oen wants to save temporary intermediate weights locally, and then let the server to grap check points from local hosts, then this is required. Please provide the name of the job.\n");
+    printf("   -n     If one wants to save temporary intermediate weights "
+                      "locally, and then let the server to grab check points "
+                      "from local hosts, then this is required. Please provide "
+                      "the name of the job.\n");
     printf("   -h     Print this help and exit\n");
     printf("\n");
 }
@@ -183,6 +186,7 @@ void Parameters::parseParametersFromConfigFile(std::string cfgFileName){
     this->setNumColumns(atoi(parameters["NUM_COLUMNS"].c_str()));
     this->setNumColors(atoi(parameters["NUM_COLORS"].c_str()));
     this->setIsMinimalAction(atoi(parameters["USE_MIN_ACTIONS"].c_str()));
+    this->setIsFakeAle(atoi(parameters["USE_MIN_ACTIONS"].c_str()));
     this->setTraceThreshold(atof(parameters["TRACE_THRESHOLD"].c_str()));
     this->setUseRewardSign(atoi(parameters["USE_REWARD_SIGN"].c_str()));
     this->setSubtractBackground(atoi(parameters["SUBTRACT_BACKGROUND"].c_str()));
@@ -383,12 +387,20 @@ int Parameters::getNumColors(){
     return this->numColors;
 }
 
+void Parameters::setIsFakeAle(int a){
+    this->fakeAle = a;
+}
+
 void Parameters::setIsMinimalAction(int a){
     this->minimalAction = a;
 }
 
 int Parameters::isMinimalAction(){
     return this->minimalAction;
+}
+
+int Parameters::isFakeAle(){
+    return this->fakeAle;
 }
 
 double Parameters::getTraceThreshold(){

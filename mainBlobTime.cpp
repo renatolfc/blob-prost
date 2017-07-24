@@ -69,8 +69,10 @@ int main(int argc, char** argv){
     sarsaLearner.learnPolicy(ale, &features);
     
 
-    printf("\n\n== Evaluation without Learning == \n\n");
-    sarsaLearner.evaluatePolicy(ale, &features);
-	
+    if (!param.isFakeAle()) {
+        printf("\n\n== Evaluation without Learning == \n\n");
+        sarsaLearner.evaluatePolicy(ale, &features);
+    }
+
     return 0;
 }

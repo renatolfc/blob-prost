@@ -28,6 +28,7 @@ SarsaLearner::SarsaLearner(ALEInterface& ale, Features *features, Parameters *pa
     
     delta = 0.0;
     alpha = param->getAlpha();
+    fakeAle = param->isFakeAle();
     learningRate = alpha;
     lambda = param->getLambda();
     numGroups = 0;
@@ -307,8 +308,12 @@ void SarsaLearner::learnPolicy(ALEInterface& ale, Features *features){
         trueFeatureSize = F.size();
         groupFeatures(F);
         updateQValues(F, Q);
-        
-        currentAction = epsilonGreedy(Q,episode);
+
+        if (fakeAle) {
+            currentAction = ale.getInt("current_action");
+        } else {
+            currentAction = epsilonGreedy(Q,episode);
+        }
         gettimeofday(&tvBegin, NULL);
         int lives = ale.lives();
         //Repeat(for each step of episode) until game is over:
@@ -331,7 +336,11 @@ void SarsaLearner::learnPolicy(ALEInterface& ale, Features *features){
                 trueFnextSize = Fnext.size();
                 groupFeatures(Fnext);
                 updateQValues(Fnext, Qnext);     //Update Q-values for the new active features
-                nextAction = epsilonGreedy(Qnext,episode);
+                if (fakeAle) {
+                    nextAction = ale.getInt("next_action");
+                } else {
+                    nextAction = epsilonGreedy(Qnext,episode);
+                }
             }
             else{
                 nextAction = 0;
@@ -532,4 +541,5 @@ void SarsaLearner::loadWeights(){
     while(weightsFile >> i >> j >> value){
         w[i][j] = value;
     }
+    weightsFile.close();
 }
