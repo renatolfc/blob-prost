@@ -40,6 +40,9 @@ int RLLearner::epsilonGreedy(vector<float> &QValues){
     randomActionTaken = 0;
     
     int action = Mathematics::argmax(QValues,agentRand);
+    if (finalEpsilon == 0.0) {
+        return action;
+    }
     //With probability epsilon: a <- random action in A(s)
     int random = (*agentRand)();
     float epsilon = finalEpsilon;
@@ -55,6 +58,9 @@ int RLLearner::epsilonGreedy(vector<float> &QValues, int episode){
     randomActionTaken = 0;
     
     int action = Mathematics::argmax(QValues,agentRand);
+    if (finalEpsilon == 0.0) {
+        return action;
+    }
     //With probability epsilon: a <- random action in A(s)
     int random = (*agentRand)();
     float epsilon = finalEpsilon;
