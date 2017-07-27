@@ -21,11 +21,11 @@ using namespace std;
 //using google::dense_hash_map;
 
 SarsaLearner::SarsaLearner(ALEInterface& ale, Features *features, Parameters *param,int seed) : RLLearner(ale, param,seed) {
-    
+
     totalNumberFrames = 0.0;
     maxFeatVectorNorm = 1;
     saveThreshold =0;
-    
+
     delta = 0.0;
     alpha = param->getAlpha();
     fakeAle = param->isFakeAle();
@@ -40,7 +40,7 @@ SarsaLearner::SarsaLearner(ALEInterface& ale, Features *features, Parameters *pa
     randomNoOp = param->getRandomNoOp();
     noOpMax = param->getNoOpMax();
     numStepsPerAction = param->getNumStepsPerAction();
-    
+
     for(int i = 0; i < numActions; i++){
         //Initialize Q;
         Q.push_back(0);
@@ -61,7 +61,7 @@ SarsaLearner::SarsaLearner(ALEInterface& ale, Features *features, Parameters *pa
         checkPointToLoad.open(checkPointLoadName.c_str());
         if (checkPointToLoad.is_open()){
             loadCheckPoint(checkPointToLoad);
-            remove(checkPointLoadName.c_str());
+            checkPointToLoad.close();
         }
         saveThreshold = (totalNumberFrames/saveWeightsEveryXFrames)*saveWeightsEveryXFrames;
         ofstream learningConditionFile;
@@ -106,7 +106,7 @@ void SarsaLearner::updateReplTrace(int action, vector<long long> &Features){
         }
         nonZeroElig[a].resize(numNonZero);
     }
-    
+
     //For all i in Fa:
     for(unsigned int i = 0; i < F.size(); i++){
         long long idx = Features[i];
@@ -138,7 +138,7 @@ void SarsaLearner::updateAcumTrace(int action, vector<long long> &Features){
         }
         nonZeroElig[a].resize(numNonZero);
     }
-    
+
     //For all i in Fa:
     for(unsigned int i = 0; i < F.size(); i++){
         long long idx = Features[i];
@@ -180,7 +180,7 @@ void SarsaLearner::saveCheckPoint(int episode, int totalNumberFrames, vector<flo
         rename(nameForLearningCondition.c_str(),newNameForLearningCondition.c_str());
         nameForLearningCondition = newNameForLearningCondition;
     }
-    
+
     //write parameters checkPoint
     string currentCheckPointName = checkPointName+"-checkPoint-Frames"+to_string(saveThreshold)+"-writing.txt";
     ofstream checkPointFile;
@@ -208,21 +208,18 @@ void SarsaLearner::saveCheckPoint(int episode, int totalNumberFrames, vector<flo
         checkPointFile<<"\t";
     }
     checkPointFile << endl;
-    
+
     for (auto it=featureTranslate.begin(); it!=featureTranslate.end();++it){
         checkPointFile<<it->first<<" "<<it->second<<"\t";
     }
     checkPointFile<<endl;
     checkPointFile.close();
-    
+
     string previousVersionCheckPoint = checkPointName+"-checkPoint-Frames"+to_string(saveThreshold-saveWeightsEveryXFrames)+"-finished.txt";
-    if((saveThreshold-saveWeightsEveryXFrames)%50000000 != 0){
-        remove(previousVersionCheckPoint.c_str());
-    }   
     string oldCheckPointName = currentCheckPointName;
     currentCheckPointName.replace(currentCheckPointName.end()-11,currentCheckPointName.end()-4,"finished");
     rename(oldCheckPointName.c_str(),currentCheckPointName.c_str());
-    
+
 }
 
 void SarsaLearner::loadCheckPoint(ifstream& checkPointToLoad){
@@ -258,7 +255,7 @@ void SarsaLearner::loadCheckPoint(ifstream& checkPointToLoad){
             w[action][groupIndex] = weight;
         }
     }
-    
+
     long long featureIndex;
     long long featureToGroup;
     while (checkPointToLoad >> featureIndex && checkPointToLoad >> featureToGroup){
@@ -269,7 +266,7 @@ void SarsaLearner::loadCheckPoint(ifstream& checkPointToLoad){
 }
 
 void SarsaLearner::learnPolicy(ALEInterface& ale, Features *features){
-    
+
     struct timeval tvBegin, tvEnd, tvDiff;
     vector<float> reward;
     double elapsedTime;
@@ -278,10 +275,10 @@ void SarsaLearner::learnPolicy(ALEInterface& ale, Features *features){
     vector<float> episodeResults;
     vector<int> episodeFrames;
     vector<double> episodeFps;
-    
+
     long long trueFeatureSize = 0;
     long long trueFnextSize = 0;
-    
+
     //Repeat (for each episode):
     //This is going to be interrupted by the ALE code since I set max_num_frames beforehand
     for(int episode = episodePassed+1; totalNumberFrames < totalNumberOfFramesToLearn; episode++){
@@ -293,7 +290,7 @@ void SarsaLearner::learnPolicy(ALEInterface& ale, Features *features){
                 ale.act(actions[0]);
             }
         }
-        
+
         //We have to clean the traces every episode:
         for(unsigned int a = 0; a < nonZeroElig.size(); a++){
             for(unsigned long long i = 0; i < nonZeroElig[a].size(); i++){
@@ -302,7 +299,7 @@ void SarsaLearner::learnPolicy(ALEInterface& ale, Features *features){
             }
             nonZeroElig[a].clear();
         }
-        
+
         F.clear();
         features->getActiveFeaturesIndices(ale.getScreen(), ale.getRAM(), F);
         trueFeatureSize = F.size();
@@ -324,7 +321,7 @@ void SarsaLearner::learnPolicy(ALEInterface& ale, Features *features){
             reward.push_back(0.0);
             updateQValues(F, Q);
             updateReplTrace(currentAction, F);
-            
+
             sanityCheck();
             //Take action, observe reward and next state:
             act(ale, currentAction, reward);
@@ -355,7 +352,7 @@ void SarsaLearner::learnPolicy(ALEInterface& ale, Features *features){
                 learningRate = alpha/maxFeatVectorNorm;
             }
             delta = reward[0] + gamma * Qnext[nextAction] - Q[currentAction];
-            
+
             //Update weights vector:
             for(unsigned int a = 0; a < nonZeroElig.size(); a++){
                 for(unsigned int i = 0; i < nonZeroElig[a].size(); i++){
@@ -370,7 +367,7 @@ void SarsaLearner::learnPolicy(ALEInterface& ale, Features *features){
         gettimeofday(&tvEnd, NULL);
         timeval_subtract(&tvDiff, &tvEnd, &tvBegin);
         elapsedTime = double(tvDiff.tv_sec) + double(tvDiff.tv_usec)/1000000.0;
-        
+
         double fps = double(ale.getEpisodeFrameNumber())/elapsedTime;
         printf("episode: %d,\t%.0f points,\tavg. return: %.1f,\t%d frames,\t%.0f fps\n",
                episode, cumReward - prevCumReward, (double)cumReward/(episode),
@@ -395,12 +392,12 @@ void SarsaLearner::evaluatePolicy(ALEInterface& ale, Features *features){
     double prevCumReward = 0;
     struct timeval tvBegin, tvEnd, tvDiff;
     double elapsedTime;
-    
+
     std::string oldName = checkPointName+"-Result-writing.txt";
     std::string newName = checkPointName+"-Result-finished.txt";
     std::ofstream resultFile;
     resultFile.open(oldName.c_str());
-    
+
     //Repeat (for each episode):
     for(int episode = 1; episode < numEpisodesEval; episode++){
         //Repeat(for each step of episode) until game is over:
@@ -428,7 +425,7 @@ void SarsaLearner::evaluatePolicy(ALEInterface& ale, Features *features){
         timeval_subtract(&tvDiff, &tvEnd, &tvBegin);
         elapsedTime = double(tvDiff.tv_sec) + double(tvDiff.tv_usec)/1000000.0;
         double fps = double(ale.getEpisodeFrameNumber())/elapsedTime;
-        
+
         resultFile<<"Episode "<<episode<<": "<<cumReward-prevCumReward<<std::endl;
         printf("episode: %d,\t%.0f points,\tavg. return: %.1f,\t%d frames,\t%.0f fps\n",
                episode, (cumReward-prevCumReward), (double)cumReward/(episode), ale.getEpisodeFrameNumber(), fps);
@@ -439,12 +436,12 @@ void SarsaLearner::evaluatePolicy(ALEInterface& ale, Features *features){
     resultFile<<"Average: "<<(double)cumReward/numEpisodesEval<<std::endl;
     resultFile.close();
     rename(oldName.c_str(),newName.c_str());
-    
+
 }
 
 void SarsaLearner::groupFeatures(vector<long long>& activeFeatures){
     vector<long long> activeGroupIndices;
-    
+
     int newGroup = 0;
     for (unsigned long long i = 0; i <activeFeatures.size();++i){
         long long featureIndex = activeFeatures[i];
@@ -474,12 +471,12 @@ void SarsaLearner::groupFeatures(vector<long long>& activeFeatures){
             it->push_back(featureIndex);
         }
     }
-    
+
     activeFeatures.clear();
     if (newGroup){
         activeFeatures.push_back(groups.size()-1);
     }
-    
+
     for (unsigned long long index=0;index<activeGroupIndices.size();++index){
         long long groupIndex = activeGroupIndices[index];
         if (groups[groupIndex].features.size()!=groups[groupIndex].numFeatures && groups[groupIndex].features.size()!=0){
@@ -531,13 +528,13 @@ void SarsaLearner::loadWeights(){
     int nActions, nFeatures;
     int i, j;
     double value;
-    
+
     std::ifstream weightsFile (pathWeightsFileToLoad.c_str());
-    
+
     weightsFile >> nActions >> nFeatures;
     assert(nActions == numActions);
     assert(nFeatures == numFeatures);
-    
+
     while(weightsFile >> i >> j >> value){
         w[i][j] = value;
     }
