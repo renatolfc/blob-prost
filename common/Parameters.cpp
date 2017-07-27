@@ -45,9 +45,9 @@ void Parameters::printHelp(char** argv){
 }
 
 Parameters::Parameters(int argc, char** argv){
-    
+
     this->setSaveTrajectoryPath("");
-    
+
     this->readParameters(argc, argv);
     //Get the game being played by the path to ROM:
     size_t pos = 0;
@@ -172,7 +172,7 @@ void Parameters::parseParametersFromConfigFile(std::string cfgFileName){
     else{
         printf("Unable to open the file '%s', defined as the configuration file.\n", cfgFileName.c_str());
     }
-    
+
     this->setAlpha(atof(parameters["ALPHA"].c_str()));
     this->setGamma(atof(parameters["GAMMA"].c_str()));
     this->setEpsilon(atof(parameters["EPSILON"].c_str()));
@@ -192,58 +192,58 @@ void Parameters::parseParametersFromConfigFile(std::string cfgFileName){
     this->setSubtractBackground(atoi(parameters["SUBTRACT_BACKGROUND"].c_str()));
     this->setToSaveTrajectory(atoi(parameters["SAVE_TRAJECTORY"].c_str()));
     this->setOptimisticInitialization(atoi(parameters["OPTIMISTIC_INIT"].c_str()));
-    
+
     this->setFrequencySavingWeights(atoi(parameters["FREQUENCY_SAVING"].c_str()));
     this->setLearningLength(atoi(parameters["TOTAL_FRAMES_LEARN"].c_str()));
-    
+
     if(this->getSubtractBackground()){
         std::string folderWithBackgrounds = parameters["PATH_TO_BACKGROUND"];
         setPathToBackground(folderWithBackgrounds, this->gameBeingPlayed);
     }
-    
+
     if (parameters.count("RESOLUTIONS")>0){
         this->setResolutions(parameters["RESOLUTIONS"]);
     }else{
         parameters["RESOLUTIONS"] = "15*10";
         this->setResolutions(parameters["RESOLUTIONS"]);
     }
-    
+
     if (parameters.count("EPSILON_DECAY")>0){
         this->setEpsilonDecay(atoi(parameters["EPSILON_DECAY"].c_str()));
     }else{
         this->setEpsilonDecay(0);
     }
-    
+
     if (parameters.count("FINAL_EXPLORATION_FRAME")>0){
         this->setFinalExplorationFrame(atoi(parameters["FINAL_EXPLORATION_FRAME"].c_str()));
     }else{
         this->setFinalExplorationFrame(0);
     }
-    
+
     if (parameters.count("NEIGHBOR_SIZE")>0){
         this->setNeighborSize(atoi(parameters["NEIGHBOR_SIZE"].c_str()));
     }else{
         this->setNeighborSize(3);
     }
-    
+
     if (parameters.count("DROP_OUT")>0){
         this->setDropOut(atoi(parameters["DROP_OUT"].c_str()));
     }else{
         this->setDropOut(0);
     }
-    
+
     if (parameters.count("FINAL_NUMBER_OF_BLOBS")>0){
         this->setFinalNumberOfBlobs(atoi(parameters["FINAL_NUMBER_OF_BLOBS"].c_str()));
     }else{
         this->setFinalNumberOfBlobs(0);
     }
-    
+
     if (parameters.count("RANDOM_NO_OP")>0){
         this->setRandomNoOp(atoi(parameters["RANDOM_NO_OP"].c_str()));
     }else{
         this->setRandomNoOp(0);
     }
-    
+
     if (parameters.count("NO_OP_MAX")>0){
         this->setNoOpMax(atoi(parameters["NO_OP_MAX"].c_str()));
     }else{
@@ -484,7 +484,7 @@ void Parameters::setResolutions(std::string a){
             s=s+' ';
         }
     }
-    
+
     std::stringstream ss(s);
     int c;
     while (ss>>c){
