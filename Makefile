@@ -27,13 +27,19 @@ ifeq ($(strip $(USE_SDL)), 1)
   LDFLAGS += -lSDL -lSDL_gfx -lSDL_image
 endif
 
-all: $(OUT_FILE)
+all: $(OUT_FILE) ql
 
-$(OUT_FILE): bin/mainBlobTime.o bin/Mathematics.o bin/Parameters.o bin/Timer.o bin/Features.o bin/Background.o bin/BlobTimeFeatures.o bin/RLLearner.o bin/SarsaLearner.o bin/QLearner.o
-	$(CXX) $(FLAGS) bin/mainBlobTime.o bin/Mathematics.o bin/Timer.o bin/Parameters.o bin/Features.o bin/Background.o bin/BlobTimeFeatures.o bin/RLLearner.o bin/SarsaLearner.o bin/QLearner.o -o learnerBlobTime
+$(OUT_FILE): bin/mainBlobTime.o bin/Mathematics.o bin/Parameters.o bin/Timer.o bin/Features.o bin/Background.o bin/BlobTimeFeatures.o bin/RLLearner.o bin/SarsaLearner.o
+	$(CXX) $(FLAGS) bin/mainBlobTime.o bin/Mathematics.o bin/Timer.o bin/Parameters.o bin/Features.o bin/Background.o bin/BlobTimeFeatures.o bin/RLLearner.o bin/SarsaLearner.o -o learnerBlobTime
+
+ql: bin/Mathematics.o bin/Parameters.o bin/Timer.o bin/Features.o bin/Background.o bin/BlobTimeFeatures.o bin/RLLearner.o bin/QLearner.o bin/ql.o
+	$(CXX) $(FLAGS) bin/Mathematics.o bin/Timer.o bin/Parameters.o bin/Features.o bin/Background.o bin/BlobTimeFeatures.o bin/RLLearner.o bin/QLearner.o bin/ql.o -o ql
 
 bin/mainBlobTime.o: mainBlobTime.cpp
 	$(CXX) $(FLAGS) -c mainBlobTime.cpp -o bin/mainBlobTime.o
+
+bin/ql.o: ql.cpp
+	$(CXX) $(FLAGS) -c ql.cpp -o bin/ql.o
 
 bin/Mathematics.o: common/Mathematics.cpp
 	$(CXX) $(FLAGS) -c common/Mathematics.cpp -o bin/Mathematics.o
@@ -63,7 +69,7 @@ bin/QLearner.o: agents/rl/q/QLearner.cpp
 	$(CXX) $(FLAGS) -c agents/rl/q/QLearner.cpp -o bin/QLearner.o
 
 clean:
-	rm -rf ${OUT_FILE} bin/*.o
+	rm -rf ${OUT_FILE} bin/*.o ql
 	rm -f learner*
 
 
