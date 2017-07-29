@@ -62,8 +62,11 @@ SarsaLearner::SarsaLearner(ALEInterface& ale, Features *features, Parameters *pa
         string checkPointLoadName = checkPointName+"-checkPoint.txt";
         checkPointToLoad.open(checkPointLoadName.c_str());
         if (checkPointToLoad.is_open()){
+            printf("Loading checkpoint %s\n", checkPointLoadName.c_str());
             loadCheckPoint(checkPointToLoad);
             checkPointToLoad.close();
+        } else {
+            printf("Failed to load checkpoint %s\n", checkPointLoadName.c_str());
         }
         saveThreshold = (totalNumberFrames/saveWeightsEveryXFrames)*saveWeightsEveryXFrames;
         ofstream learningConditionFile;
