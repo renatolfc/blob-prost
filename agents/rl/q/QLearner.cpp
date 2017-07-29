@@ -16,6 +16,8 @@
 #include <set>
 using namespace std;
 
+#include <unistd.h>
+
 QLearner::QLearner(ALEInterface& ale, Features *features, Parameters *param,int seed) : RLLearner(ale, param,seed) {
 
     totalNumberFrames = 0.0;
@@ -225,7 +227,8 @@ void QLearner::saveCheckPoint(int episode, int totalNumberFrames, vector<float>&
     string oldCheckPointName = currentCheckPointName;
     currentCheckPointName.replace(currentCheckPointName.end()-11,currentCheckPointName.end()-4,"finished");
     rename(oldCheckPointName.c_str(),currentCheckPointName.c_str());
-
+    remove((checkPointName+"-checkPoint.txt").c_str());
+    symlink(currentCheckPointName.c_str(), (checkPointName+"-checkPoint.txt").c_str());
 }
 
 void QLearner::loadCheckPoint(ifstream& checkPointToLoad){

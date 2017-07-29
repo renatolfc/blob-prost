@@ -20,6 +20,8 @@
 using namespace std;
 //using google::dense_hash_map;
 
+#include <unistd.h>
+
 SarsaLearner::SarsaLearner(ALEInterface& ale, Features *features, Parameters *param,int seed) : RLLearner(ale, param,seed) {
 
     totalNumberFrames = 0.0;
@@ -219,7 +221,8 @@ void SarsaLearner::saveCheckPoint(int episode, int totalNumberFrames, vector<flo
     string oldCheckPointName = currentCheckPointName;
     currentCheckPointName.replace(currentCheckPointName.end()-11,currentCheckPointName.end()-4,"finished");
     rename(oldCheckPointName.c_str(),currentCheckPointName.c_str());
-
+    remove((checkPointName+"-checkPoint.txt").c_str());
+    symlink(currentCheckPointName.c_str(), (checkPointName+"-checkPoint.txt").c_str());
 }
 
 void SarsaLearner::loadCheckPoint(ifstream& checkPointToLoad){
