@@ -186,7 +186,7 @@ void Parameters::parseParametersFromConfigFile(std::string cfgFileName){
     this->setNumColumns(atoi(parameters["NUM_COLUMNS"].c_str()));
     this->setNumColors(atoi(parameters["NUM_COLORS"].c_str()));
     this->setIsMinimalAction(atoi(parameters["USE_MIN_ACTIONS"].c_str()));
-    this->setIsFakeAle(atoi(parameters["USE_MIN_ACTIONS"].c_str()));
+    this->setIsFakeAle(atoi(parameters["FAKE_ALE"].c_str()));
     this->setTraceThreshold(atof(parameters["TRACE_THRESHOLD"].c_str()));
     this->setUseRewardSign(atoi(parameters["USE_REWARD_SIGN"].c_str()));
     this->setSubtractBackground(atoi(parameters["SUBTRACT_BACKGROUND"].c_str()));
