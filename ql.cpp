@@ -55,7 +55,7 @@ int main(int argc, char** argv){
 	ale.setInt("random_seed", 2*param.getSeed());
 	ale.setInt("frame_skip", param.getNumStepsPerAction());
 	ale.setInt("max_num_frames_per_episode", param.getEpisodeLength());
-    ale.setBool("color_averaging", false);
+    ale.setBool("color_averaging", true);
 
     if (param.isFakeAle()) {
     	printf("Using fake ALE for training...\n");
