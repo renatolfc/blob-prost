@@ -363,7 +363,7 @@ void BlobTimeFeatures::getActiveFeaturesIndices(const ALEScreen &screen, const A
     }
     features.push_back(numBasicFeatures+numRelativeFeatures + numTimeDimensionalOffsets);
 
-    if (fakeAle && frameSkip == 1) {
+    if (frameSkip == 1) {
         previousBlobs = blobRegister.shift(blobs);
         previousBlobActiveColors = colorRegister.shift(blobActiveColors);
     } else {
