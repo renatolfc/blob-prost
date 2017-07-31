@@ -39,13 +39,13 @@ $(OBJDIR)/%.o : src/%.cpp
 	$(CXX) $(CXXFLAGS) $< -c -o $@
 
 sarsa: $(OBJS) $(SARSA_OBJ) src/mainBlobTime.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) src/mainBlobTime.cpp -o sarsa
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(SARSA_OBJ) src/mainBlobTime.cpp -o sarsa
 
 seqsarsa: $(OBJS) $(SEQ_OBJS) src/seqsarsa.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(SEQ_OBJS) src/seqsarsa.cpp -o seqsarsa
 
-ql: $(OBJS) src/ql.cpp
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) src/ql.cpp -o ql
+ql: $(OBJS) $(Q_OBJ) src/ql.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(Q_OBJ) src/ql.cpp -o ql
 
 clean:
 	rm -rf $(TARGETS) $(OBJDIR)
