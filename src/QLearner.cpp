@@ -5,10 +5,7 @@
  * are made to make it more efficient, as not iterating over all features.
  ***************************************************************************************/
 
-#ifndef TIMER_H
-#define TIMER_H
 #include "Timer.hpp"
-#endif
 #include "Mathematics.hpp"
 #include "QLearner.hpp"
 #include <stdio.h>

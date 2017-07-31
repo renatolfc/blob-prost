@@ -16,7 +16,7 @@ SARSA_OBJ := $(OBJDIR)/SarsaLearner.o
 RL_OBJ := $(OBJDIR)/RLLearner.o
 Q_OBJ := $(OBJDIR)/QLearner.o
 FEATURE_OBJS := $(addprefix $(OBJDIR)/,Features.o Background.o BlobTimeFeatures.o)
-COMMON_OBJS := $(addprefix $(OBJDIR)/,Parameters.o Mathematics.o Timer.o)
+COMMON_OBJS := $(addprefix $(OBJDIR)/,Parameters.o Mathematics.o Timer.o agcd_interface.o)
 OBJS := $(SARSA_OBJ) $(RL_OBJ) $(Q_OBJ) $(FEATURE_OBJS) $(COMMON_OBJS)
 
 SARSA_DIR := agents/rl/sarsa
