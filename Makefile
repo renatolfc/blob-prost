@@ -17,7 +17,9 @@ RL_OBJ := $(OBJDIR)/RLLearner.o
 Q_OBJ := $(OBJDIR)/QLearner.o
 FEATURE_OBJS := $(addprefix $(OBJDIR)/,Features.o Background.o BlobTimeFeatures.o)
 COMMON_OBJS := $(addprefix $(OBJDIR)/,Parameters.o Mathematics.o Timer.o)
-OBJS := $(SARSA_OBJ) $(RL_OBJ) $(Q_OBJ) $(FEATURE_OBJS) $(COMMON_OBJS)
+SEQ_OBJS := $(addprefix $(OBJDIR)/,SeqSarsaLearner.o)
+#OBJS := $(SARSA_OBJ) $(RL_OBJ) $(Q_OBJ) $(FEATURE_OBJS) $(COMMON_OBJS) $(SEQ_OBJS)
+OBJS := $(RL_OBJ) $(FEATURE_OBJS) $(COMMON_OBJS)
 
 SARSA_DIR := agents/rl/sarsa
 Q_DIR := agents/rl/q
@@ -36,8 +38,11 @@ $(OBJDIR):
 $(OBJDIR)/%.o : src/%.cpp
 	$(CXX) $(CXXFLAGS) $< -c -o $@
 
-sarsa: $(OBJS) src/mainBlobTime.cpp
+sarsa: $(OBJS) $(SARSA_OBJ) src/mainBlobTime.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) src/mainBlobTime.cpp -o sarsa
+
+seqsarsa: $(OBJS) $(SEQ_OBJS) src/seqsarsa.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) $(SEQ_OBJS) src/seqsarsa.cpp -o seqsarsa
 
 ql: $(OBJS) src/ql.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) src/ql.cpp -o ql
