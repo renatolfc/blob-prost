@@ -8,7 +8,7 @@
 
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
-#include "../common/Parameters.hpp"
+#include "Parameters.hpp"
 #endif
 
 class Background{

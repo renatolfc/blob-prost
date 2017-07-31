@@ -1,13 +1,17 @@
 /****************************************************************************************
- * Implementation of Watkins Q(lambda). It implements Fig. 8.9 (Linear,
- * gradient-descent Q(lambda)) from the book "R. Sutton and A. Barto;
- * Reinforcement Learning: An Introduction. 1st edition. 1988." Some updates
- * are made to make it more efficient, as not iterating over all features.
+ ** Implementation of Sarsa(lambda). It implements Fig. 8.8 (Linear, gradient-descent
+ ** Sarsa(lambda)) from the book "R. Sutton and A. Barto; Reinforcement Learning: An
+ ** Introduction. 1st edition. 1988."
+ ** Some updates are made to make it more efficient, as not iterating over all features.
+ **
+ ** TODO: Make it as efficient as possible.
+ **
+ ** Author: Marlos C. Machado
  ***************************************************************************************/
 
 #ifndef RLLEARNER_H
 #define RLLEARNER_H
-#include "../RLLearner.hpp"
+#include "RLLearner.hpp"
 #endif
 #include <vector>
 #include <unordered_map>
@@ -23,7 +27,7 @@ struct Group{
     vector<long long> features;
 };
 
-class QLearner : public RLLearner{
+class SarsaLearner : public RLLearner{
 private:
     float alpha, delta, lambda, traceThreshold;
     float learningRate;
@@ -57,17 +61,17 @@ private:
     vector<Group> groups;
     
     /**
-     * Constructor declared as private to force the user to instantiate QLearner
+     * Constructor declared as private to force the user to instantiate SarsaLearner
      * informing the parameters to learning/execution.
      */
-    QLearner();
+    SarsaLearner();
     /**
      * This method evaluates whether the Q-values are sound. By unsound I mean huge Q-values (> 10e7)
      * or NaN values. If so, it finishes the execution informing the algorithm has diverged.
      */
     void sanityCheck();
     /**
-     * In Q the Q-values (one per action) are updated as the sum of weights for that given action.
+     * In Sarsa the Q-values (one per action) are updated as the sum of weights for that given action.
      * To avoid writing it more than once on the code, its update was extracted to a separate function.
      * It updates the vector<double> Q assuming that vector<int> F is filled, as it sums just the weights
      * that are active in F.
@@ -85,7 +89,6 @@ private:
      * the rule: e[action][i] = gamma * lambda * e[action][i]. It is possible to also define thresholding.
      */
     void updateAcumTrace(int action, vector<long long> &Features);
-    inline void zeroTraces();
     /**
      * Prints the weights in a file. Each line will contain a weight.
      */
@@ -98,9 +101,9 @@ private:
     void loadCheckPoint(ifstream& checkPointToLoad);
     void groupFeatures(vector<long long>& activeFeatures);
 public:
-    QLearner(ALEInterface& ale, Features *features, Parameters *param,int seed);
+    SarsaLearner(ALEInterface& ale, Features *features, Parameters *param,int seed);
     /**
-     * Implementation of an agent controller. This implementation is Q(lambda).
+     * Implementation of an agent controller. This implementation is Sarsa(lambda).
      *
      * @param ALEInterface& ale Arcade Learning Environment interface: object used to define agents'
      *        actions, obtain simulator's screen, RAM, etc.
@@ -119,5 +122,5 @@ public:
     /**
      * Destructor, not necessary in this class.
      */
-    ~QLearner();
+    ~SarsaLearner();
 };

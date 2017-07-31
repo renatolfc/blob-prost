@@ -8,7 +8,7 @@
 
 #ifndef RLLEARNER_H
 #define RLLEARNER_H
-#include "../RLLearner.hpp"
+#include "RLLearner.hpp"
 #endif
 #include <vector>
 #include <unordered_map>

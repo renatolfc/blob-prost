@@ -11,7 +11,7 @@
 
 #ifndef TIMER_H
 #define TIMER_H
-#include "../../../common/Timer.hpp"
+#include "Timer.hpp"
 #endif
 #include "GQLearner.hpp"
 #include <stdio.h>

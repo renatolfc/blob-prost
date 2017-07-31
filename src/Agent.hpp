@@ -12,11 +12,11 @@
 #endif
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
-#include "../common/Parameters.hpp"
+#include "Parameters.hpp"
 #endif
 #ifndef FEATURES_H
 #define FEATURES_H
-#include "../features/Features.hpp"
+#include "Features.hpp"
 #endif
 
 class Agent{

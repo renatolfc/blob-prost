@@ -1,24 +1,28 @@
 /****************************************************************************************
- * Implementation of Watkins Q(lambda). It implements Fig. 8.9 (Linear,
- * gradient-descent Q(lambda)) from the book "R. Sutton and A. Barto;
- * Reinforcement Learning: An Introduction. 1st edition. 1988." Some updates
- * are made to make it more efficient, as not iterating over all features.
+ ** Implementation of Sarsa(lambda). It implements Fig. 8.8 (Linear, gradient-descent
+ ** Sarsa(lambda)) from the book "R. Sutton and A. Barto; Reinforcement Learning: An
+ ** Introduction. 1st edition. 1988."
+ ** Some updates are made to make it more efficient, as not iterating over all features.
+ **
+ ** TODO: Make it as efficient as possible.
+ **
+ ** Author: Marlos C. Machado
  ***************************************************************************************/
 
 #ifndef TIMER_H
 #define TIMER_H
-#include "../../../common/Timer.hpp"
+#include "Timer.hpp"
 #endif
-#include "../../../common/Mathematics.hpp"
-#include "QLearner.hpp"
+#include "SarsaLearner.hpp"
 #include <stdio.h>
 #include <math.h>
 #include <set>
 using namespace std;
+//using google::dense_hash_map;
 
 #include <unistd.h>
 
-QLearner::QLearner(ALEInterface& ale, Features *features, Parameters *param,int seed) : RLLearner(ale, param,seed) {
+SarsaLearner::SarsaLearner(ALEInterface& ale, Features *features, Parameters *param,int seed) : RLLearner(ale, param,seed) {
 
     totalNumberFrames = 0.0;
     maxFeatVectorNorm = 1;
@@ -75,9 +79,9 @@ QLearner::QLearner(ALEInterface& ale, Features *features, Parameters *param,int 
     }
 }
 
-QLearner::~QLearner(){}
+SarsaLearner::~SarsaLearner(){}
 
-void QLearner::updateQValues(vector<long long> &Features, vector<float> &QValues){
+void SarsaLearner::updateQValues(vector<long long> &Features, vector<float> &QValues){
     unsigned long long featureSize = Features.size();
     for(int a = 0; a < numActions; ++a){
         float sumW = 0;
@@ -88,7 +92,7 @@ void QLearner::updateQValues(vector<long long> &Features, vector<float> &QValues
     }
 }
 
-void QLearner::updateReplTrace(int action, vector<long long> &Features){
+void SarsaLearner::updateReplTrace(int action, vector<long long> &Features){
     //e <- gamma * lambda * e
     for(unsigned int a = 0; a < nonZeroElig.size(); a++){
         long long numNonZero = 0;
@@ -120,17 +124,7 @@ void QLearner::updateReplTrace(int action, vector<long long> &Features){
     }
 }
 
-inline void QLearner::zeroTraces() {
-    for(unsigned int a = 0; a < nonZeroElig.size(); a++){
-        for(unsigned long long i = 0; i < nonZeroElig[a].size(); i++){
-            long long idx = nonZeroElig[a][i];
-            e[a][idx] = 0.0;
-        }
-        nonZeroElig[a].clear();
-    }
-}
-
-void QLearner::updateAcumTrace(int action, vector<long long> &Features){
+void SarsaLearner::updateAcumTrace(int action, vector<long long> &Features){
     //e <- gamma * lambda * e
     for(unsigned int a = 0; a < nonZeroElig.size(); a++){
         long long numNonZero = 0;
@@ -162,7 +156,7 @@ void QLearner::updateAcumTrace(int action, vector<long long> &Features){
     }
 }
 
-void QLearner::sanityCheck(){
+void SarsaLearner::sanityCheck(){
     for(int i = 0; i < numActions; i++){
         if(fabs(Q[i]) > 10e7 || Q[i] != Q[i] /*NaN*/){
             printf("It seems your algorithm diverged!\n");
@@ -172,7 +166,7 @@ void QLearner::sanityCheck(){
 }
 
 //To do: we do not want to save weights that are zero
-void QLearner::saveCheckPoint(int episode, int totalNumberFrames, vector<float>& episodeResults,int& frequency,vector<int>& episodeFrames, vector<double>& episodeFps){
+void SarsaLearner::saveCheckPoint(int episode, int totalNumberFrames, vector<float>& episodeResults,int& frequency,vector<int>& episodeFrames, vector<double>& episodeFps){
     ofstream learningConditionFile;
     string newNameForLearningCondition = checkPointName+"-learningCondition-Frames"+to_string(saveThreshold)+"-writing.txt";
     int renameReturnCode = rename(nameForLearningCondition.c_str(),newNameForLearningCondition.c_str());
@@ -234,7 +228,7 @@ void QLearner::saveCheckPoint(int episode, int totalNumberFrames, vector<float>&
     symlink(currentCheckPointName.c_str(), (checkPointName+"-checkPoint.txt").c_str());
 }
 
-void QLearner::loadCheckPoint(ifstream& checkPointToLoad){
+void SarsaLearner::loadCheckPoint(ifstream& checkPointToLoad){
     checkPointToLoad >> (*agentRand);
     checkPointToLoad >> totalNumberFrames;
     while (totalNumberFrames<1000){
@@ -277,7 +271,7 @@ void QLearner::loadCheckPoint(ifstream& checkPointToLoad){
     checkPointToLoad.close();
 }
 
-void QLearner::learnPolicy(ALEInterface& ale, Features *features){
+void SarsaLearner::learnPolicy(ALEInterface& ale, Features *features){
 
     struct timeval tvBegin, tvEnd, tvDiff;
     vector<float> reward;
@@ -290,7 +284,6 @@ void QLearner::learnPolicy(ALEInterface& ale, Features *features){
 
     long long trueFeatureSize = 0;
     long long trueFnextSize = 0;
-    int greedyAction;
 
     //Repeat (for each episode):
     //This is going to be interrupted by the ALE code since I set max_num_frames beforehand
@@ -305,7 +298,13 @@ void QLearner::learnPolicy(ALEInterface& ale, Features *features){
         }
 
         //We have to clean the traces every episode:
-        zeroTraces();
+        for(unsigned int a = 0; a < nonZeroElig.size(); a++){
+            for(unsigned long long i = 0; i < nonZeroElig[a].size(); i++){
+                long long idx = nonZeroElig[a][i];
+                e[a][idx] = 0.0;
+            }
+            nonZeroElig[a].clear();
+        }
 
         F.clear();
         features->getActiveFeaturesIndices(ale.getScreen(), ale.getRAM(), F);
@@ -316,32 +315,22 @@ void QLearner::learnPolicy(ALEInterface& ale, Features *features){
         if (fakeAle) {
             currentAction = ale.getInt("current_action");
         } else {
-            currentAction = epsilonGreedy(Q, episode);
+            currentAction = epsilonGreedy(Q,episode);
         }
         gettimeofday(&tvBegin, NULL);
-
+        int lives = ale.lives();
         //Repeat(for each step of episode) until game is over:
         //This also stops when the maximum number of steps per episode is reached
         while(!ale.game_over()){
             reward.clear();
             reward.push_back(0.0);
             reward.push_back(0.0);
-
-            greedyAction = Mathematics::argmax(Q, agentRand);
-
-            if (currentAction == greedyAction) {
-                updateQValues(F, Q);
-                updateAcumTrace(currentAction, F);
-            } else {
-                zeroTraces();
-            }
+            updateQValues(F, Q);
+            updateReplTrace(currentAction, F);
 
             sanityCheck();
             //Take action, observe reward and next state:
             act(ale, currentAction, reward);
-
-            delta = reward[0] - Q[currentAction];
-
             cumReward  += reward[1];
             if(!ale.game_over()){
                 //Obtain active features in the new state:
@@ -368,7 +357,7 @@ void QLearner::learnPolicy(ALEInterface& ale, Features *features){
                 maxFeatVectorNorm = trueFeatureSize;
                 learningRate = alpha/maxFeatVectorNorm;
             }
-            delta = delta + gamma *  Q[greedyAction];
+            delta = reward[0] + gamma * Qnext[nextAction] - Q[currentAction];
 
             //Update weights vector:
             for(unsigned int a = 0; a < nonZeroElig.size(); a++){
@@ -403,7 +392,7 @@ void QLearner::learnPolicy(ALEInterface& ale, Features *features){
     }
 }
 
-void QLearner::evaluatePolicy(ALEInterface& ale, Features *features){
+void SarsaLearner::evaluatePolicy(ALEInterface& ale, Features *features){
     double reward = 0;
     double cumReward = 0;
     double prevCumReward = 0;
@@ -456,7 +445,7 @@ void QLearner::evaluatePolicy(ALEInterface& ale, Features *features){
 
 }
 
-void QLearner::groupFeatures(vector<long long>& activeFeatures){
+void SarsaLearner::groupFeatures(vector<long long>& activeFeatures){
     vector<long long> activeGroupIndices;
 
     int newGroup = 0;
@@ -522,7 +511,7 @@ void QLearner::groupFeatures(vector<long long>& activeFeatures){
     }
 }
 
-void QLearner::saveWeightsToFile(string suffix){
+void SarsaLearner::saveWeightsToFile(string suffix){
     std::ofstream weightsFile ((nameWeightsFile + suffix).c_str());
     if(weightsFile.is_open()){
         weightsFile << w.size() << " " << w[0].size() << std::endl;
@@ -540,7 +529,7 @@ void QLearner::saveWeightsToFile(string suffix){
     }
 }
 
-void QLearner::loadWeights(){
+void SarsaLearner::loadWeights(){
     string line;
     int nActions, nFeatures;
     int i, j;

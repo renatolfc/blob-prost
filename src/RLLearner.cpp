@@ -1,6 +1,6 @@
 #ifndef MATHEMATICS_H
 #define MATHEMATICS_H
-#include "../../common/Mathematics.hpp"
+#include "Mathematics.hpp"
 #endif
 
 #ifndef RL_LEARNER_H
@@ -11,19 +11,19 @@
 
 RLLearner::RLLearner(ALEInterface& ale, Parameters *param, int seed){
     randomActionTaken   = 0;
-    
+
     gamma               = param->getGamma();
-    finalEpsilon             = param->getEpsilon();
+    finalEpsilon        = param->getEpsilon();
     toUseOnlyRewardSign = param->getUseRewardSign();
     toBeOptimistic      = param->getOptimisticInitialization();
-    
+
     episodeLength       = param->getEpisodeLength();
     numEpisodesEval     = param->getNumEpisodesEval();
     totalNumberOfFramesToLearn = param->getLearningLength();
-    
+
     epsilonDecay = param->getEpsilonDecay();
     finalExplorationFrame = param->getFinalExplorationFrame();
-    
+
     //Get the number of effective actions:
     if(param->isMinimalAction()){
         actions = ale.getMinimalActionSet();
@@ -38,7 +38,7 @@ RLLearner::RLLearner(ALEInterface& ale, Parameters *param, int seed){
 
 int RLLearner::epsilonGreedy(vector<float> &QValues){
     randomActionTaken = 0;
-    
+
     int action = Mathematics::argmax(QValues,agentRand);
     if (finalEpsilon == 0.0) {
         return action;
@@ -56,7 +56,7 @@ int RLLearner::epsilonGreedy(vector<float> &QValues){
 
 int RLLearner::epsilonGreedy(vector<float> &QValues, int episode){
     randomActionTaken = 0;
-    
+
     int action = Mathematics::argmax(QValues,agentRand);
     if (finalEpsilon == 0.0) {
         return action;
@@ -83,7 +83,7 @@ int RLLearner::epsilonGreedy(vector<float> &QValues, int episode){
  */
 void RLLearner::act(ALEInterface& ale, int action, vector<float> &reward){
     double r_alg = 0.0, r_real = 0.0;
-    
+
     r_real = ale.act(actions[action]);
     if(toUseOnlyRewardSign){
         if(r_real > 0){

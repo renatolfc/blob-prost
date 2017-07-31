@@ -8,7 +8,7 @@
 
 #ifndef AGENT_H
 #define AGENT_H
-#include "../Agent.hpp"
+#include "Agent.hpp"
 #endif
 #include <random>
 using namespace std;

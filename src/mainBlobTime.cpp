@@ -2,10 +2,10 @@
 ** Starting point for running Sarsa algorithm. Here the parameters are set, the algorithm
 ** is started, as well as the features used. In fact, in order to create a new learning
 ** algorithm, once its class is implementend, the main file just need to instantiate
-** Parameters, the Learner and the type of Features to be used. This file is a good
+** Parameters, the Learner and the type of Features to be used. This file is a good 
 ** example of how to do it. A parameters file example can be seen in ../conf/sarsa.cfg.
 ** This is an example for other people to use: Sarsa with Basic Features.
-**
+** 
 ** Author: Marlos C. Machado
 ***************************************************************************************/
 
@@ -15,26 +15,29 @@
 #endif
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
-#include "common/Parameters.hpp"
+#include "Parameters.hpp"
 #endif
-#include "agents/rl/q/QLearner.hpp"
+#ifndef SARSA_H
+#define SARSA_H
+#include "SarsaLearner.hpp"
+#endif
 #ifndef BASIC_H
 #define BASIC_H
-#include "features/BlobTimeFeatures.hpp"
+#include "BlobTimeFeatures.hpp"
 #endif
 
 //#include <random>
 
 void printBasicInfo(Parameters param){
 	printf("Seed: %d\n", param.getSeed());
-	printf("\nCommand Line Arguments:\nPath to Config. File: %s\nPath to ROM File: %s\nPath to Backg. File: %s\n",
+	printf("\nCommand Line Arguments:\nPath to Config. File: %s\nPath to ROM File: %s\nPath to Backg. File: %s\n", 
 		param.getConfigPath().c_str(), param.getRomPath().c_str(), param.getPathToBackground().c_str());
 	if(param.getSubtractBackground()){
 		printf("\nBackground will be subtracted...\n");
 	}
 	printf("\nParameters read from Configuration File:\n");
-	printf("alpha:   %f\ngamma:   %f\nepsilon: %f\nlambda:  %f\nep. length: %d\n\n",
-		param.getAlpha(), param.getGamma(), param.getEpsilon(), param.getLambda(),
+	printf("alpha:   %f\ngamma:   %f\nepsilon: %f\nlambda:  %f\nep. length: %d\n\n", 
+		param.getAlpha(), param.getGamma(), param.getEpsilon(), param.getLambda(), 
 		param.getEpisodeLength());
 }
 
@@ -43,12 +46,12 @@ int main(int argc, char** argv){
 	//Reading parameters from file defined as input in the run command:
 	Parameters param(argc, argv);
 	srand(param.getSeed());
-
+	
 	//Using Basic features:
 	BlobTimeFeatures features(&param);
 	//Reporting parameters read:
 	printBasicInfo(param);
-
+	
 	ALEInterface ale(param.getDisplay());
 
 	ale.setFloat("repeat_action_probability", 0.00);
@@ -57,24 +60,18 @@ int main(int argc, char** argv){
 	ale.setInt("max_num_frames_per_episode", param.getEpisodeLength());
     ale.setBool("color_averaging", true);
 
-    if (param.isFakeAle()) {
-    	printf("Using fake ALE for training...\n");
-    } else {
-    	printf("Using real ALE for training...\n");
-    }
-
 	ale.loadROM(param.getRomPath().c_str());
 
     //mt19937 agentRand(param.getSeed());
 	//Instantiating the learning algorithm:
-	QLearner qLearner(ale, &features, &param, 2*param.getSeed()-1);
+	SarsaLearner sarsaLearner(ale, &features, &param, 2*param.getSeed()-1);
     //Learn a policy:
-    qLearner.learnPolicy(ale, &features);
-
+    sarsaLearner.learnPolicy(ale, &features);
+    
 
     if (!param.isFakeAle()) {
         printf("\n\n== Evaluation without Learning == \n\n");
-        qLearner.evaluatePolicy(ale, &features);
+        sarsaLearner.evaluatePolicy(ale, &features);
     }
 
     return 0;
