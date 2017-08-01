@@ -1,31 +1,25 @@
 /****************************************************************************************
- ** Implementation of Sarsa(lambda). It implements Fig. 8.8 (Linear, gradient-descent
- ** Sarsa(lambda)) from the book "R. Sutton and A. Barto; Reinforcement Learning: An
- ** Introduction. 1st edition. 1988."
- ** Some updates are made to make it more efficient, as not iterating over all features.
- **
- ** TODO: Make it as efficient as possible.
- **
- ** Author: Marlos C. Machado
+ * Implementation of Watkins Q(lambda). It implements Fig. 8.9 (Linear,
+ * gradient-descent Q(lambda)) from the book "R. Sutton and A. Barto;
+ * Reinforcement Learning: An Introduction. 1st edition. 1988." Some updates
+ * are made to make it more efficient, as not iterating over all features.
  ***************************************************************************************/
 
 #ifndef TIMER_H
 #define TIMER_H
 #include "Timer.hpp"
 #endif
-#include "SeqSarsaLearner.hpp"
+#include "Mathematics.hpp"
+#include "SeqQLearner.hpp"
 #include <stdio.h>
 #include <math.h>
 #include <set>
-
 #include <agcd_interface.hpp>
-
 using namespace std;
-//using google::dense_hash_map;
 
 #include <unistd.h>
 
-SeqSarsaLearner::SeqSarsaLearner(ALEInterface& ale, Features *features, Parameters *param,int seed) : RLLearner(ale, param,seed) {
+SeqQLearner::SeqQLearner(ALEInterface& ale, Features *features, Parameters *param,int seed) : RLLearner(ale, param,seed) {
 
     totalNumberFrames = 0.0;
     maxFeatVectorNorm = 1;
@@ -45,8 +39,6 @@ SeqSarsaLearner::SeqSarsaLearner(ALEInterface& ale, Features *features, Paramete
     randomNoOp = param->getRandomNoOp();
     noOpMax = param->getNoOpMax();
     numStepsPerAction = param->getNumStepsPerAction();
-
-    assert(fakeAle);
 
     for(int i = 0; i < numActions; i++){
         //Initialize Q;
@@ -84,9 +76,9 @@ SeqSarsaLearner::SeqSarsaLearner(ALEInterface& ale, Features *features, Paramete
     }
 }
 
-SeqSarsaLearner::~SeqSarsaLearner(){}
+SeqQLearner::~SeqQLearner(){}
 
-void SeqSarsaLearner::updateQValues(vector<long long> &Features, vector<float> &QValues){
+void SeqQLearner::updateQValues(vector<long long> &Features, vector<float> &QValues){
     unsigned long long featureSize = Features.size();
     for(int a = 0; a < numActions; ++a){
         float sumW = 0;
@@ -97,7 +89,7 @@ void SeqSarsaLearner::updateQValues(vector<long long> &Features, vector<float> &
     }
 }
 
-void SeqSarsaLearner::updateReplTrace(int action, vector<long long> &Features){
+void SeqQLearner::updateReplTrace(int action, vector<long long> &Features){
     //e <- gamma * lambda * e
     for(unsigned int a = 0; a < nonZeroElig.size(); a++){
         long long numNonZero = 0;
@@ -129,7 +121,17 @@ void SeqSarsaLearner::updateReplTrace(int action, vector<long long> &Features){
     }
 }
 
-void SeqSarsaLearner::updateAcumTrace(int action, vector<long long> &Features){
+inline void SeqQLearner::zeroTraces() {
+    for(unsigned int a = 0; a < nonZeroElig.size(); a++){
+        for(unsigned long long i = 0; i < nonZeroElig[a].size(); i++){
+            long long idx = nonZeroElig[a][i];
+            e[a][idx] = 0.0;
+        }
+        nonZeroElig[a].clear();
+    }
+}
+
+void SeqQLearner::updateAcumTrace(int action, vector<long long> &Features){
     //e <- gamma * lambda * e
     for(unsigned int a = 0; a < nonZeroElig.size(); a++){
         long long numNonZero = 0;
@@ -161,7 +163,7 @@ void SeqSarsaLearner::updateAcumTrace(int action, vector<long long> &Features){
     }
 }
 
-void SeqSarsaLearner::sanityCheck(){
+void SeqQLearner::sanityCheck(){
     for(int i = 0; i < numActions; i++){
         if(fabs(Q[i]) > 10e7 || Q[i] != Q[i] /*NaN*/){
             printf("It seems your algorithm diverged!\n");
@@ -171,7 +173,7 @@ void SeqSarsaLearner::sanityCheck(){
 }
 
 //To do: we do not want to save weights that are zero
-void SeqSarsaLearner::saveCheckPoint(int episode, int totalNumberFrames, vector<float>& episodeResults,int& frequency,vector<int>& episodeFrames, vector<double>& episodeFps){
+void SeqQLearner::saveCheckPoint(int episode, int totalNumberFrames, vector<float>& episodeResults,int& frequency,vector<int>& episodeFrames, vector<double>& episodeFps){
     ofstream learningConditionFile;
     string newNameForLearningCondition = checkPointName+"-learningCondition-Frames"+to_string(saveThreshold)+"-writing.txt";
     int renameReturnCode = rename(nameForLearningCondition.c_str(),newNameForLearningCondition.c_str());
@@ -233,7 +235,7 @@ void SeqSarsaLearner::saveCheckPoint(int episode, int totalNumberFrames, vector<
     symlink(currentCheckPointName.c_str(), (checkPointName+"-checkPoint.txt").c_str());
 }
 
-void SeqSarsaLearner::loadCheckPoint(ifstream& checkPointToLoad){
+void SeqQLearner::loadCheckPoint(ifstream& checkPointToLoad){
     checkPointToLoad >> (*agentRand);
     checkPointToLoad >> totalNumberFrames;
     while (totalNumberFrames<1000){
@@ -276,7 +278,8 @@ void SeqSarsaLearner::loadCheckPoint(ifstream& checkPointToLoad){
     checkPointToLoad.close();
 }
 
-void SeqSarsaLearner::learnPolicy(ALEInterface& ale, Features *features) {
+void SeqQLearner::learnPolicy(ALEInterface& ale, Features *features){
+
     struct timeval tvBegin, tvEnd, tvDiff;
     vector<float> reward;
     double elapsedTime;
@@ -288,6 +291,7 @@ void SeqSarsaLearner::learnPolicy(ALEInterface& ale, Features *features) {
 
     long long trueFeatureSize = 0;
     long long trueFnextSize = 0;
+    int greedyAction;
 
     std::string romPath = ale.getString("rom_file");
     long maxEpisodes = agcd_listdir((romPath + "/trajectories").c_str()).size();
@@ -304,13 +308,7 @@ void SeqSarsaLearner::learnPolicy(ALEInterface& ale, Features *features) {
         }
 
         //We have to clean the traces every episode:
-        for(unsigned int a = 0; a < nonZeroElig.size(); a++){
-            for(unsigned long long i = 0; i < nonZeroElig[a].size(); i++){
-                long long idx = nonZeroElig[a][i];
-                e[a][idx] = 0.0;
-            }
-            nonZeroElig[a].clear();
-        }
+        zeroTraces();
 
         F.clear();
         features->getActiveFeaturesIndices(ale.getScreen(), ale.getRAM(), F);
@@ -318,21 +316,35 @@ void SeqSarsaLearner::learnPolicy(ALEInterface& ale, Features *features) {
         groupFeatures(F);
         updateQValues(F, Q);
 
-        currentAction = ale.getInt("current_action");
+        if (fakeAle) {
+            currentAction = ale.getInt("current_action");
+        } else {
+            currentAction = epsilonGreedy(Q, episode);
+        }
         gettimeofday(&tvBegin, NULL);
-        int lives = ale.lives();
+
         //Repeat(for each step of episode) until game is over:
         //This also stops when the maximum number of steps per episode is reached
-        while(!ale.game_over() && !ale.getBool("loadedLast")){
+        while(!ale.game_over()){
             reward.clear();
             reward.push_back(0.0);
             reward.push_back(0.0);
-            updateQValues(F, Q);
-            updateReplTrace(currentAction, F);
+
+            greedyAction = Mathematics::argmax(Q, agentRand);
+
+            if (currentAction == greedyAction) {
+                updateQValues(F, Q);
+                updateAcumTrace(currentAction, F);
+            } else {
+                zeroTraces();
+            }
 
             sanityCheck();
             //Take action, observe reward and next state:
             act(ale, currentAction, reward);
+
+            delta = reward[0] - Q[currentAction];
+
             cumReward  += reward[1];
             if(!ale.game_over()){
                 //Obtain active features in the new state:
@@ -341,7 +353,11 @@ void SeqSarsaLearner::learnPolicy(ALEInterface& ale, Features *features) {
                 trueFnextSize = Fnext.size();
                 groupFeatures(Fnext);
                 updateQValues(Fnext, Qnext);     //Update Q-values for the new active features
-                nextAction = ale.getInt("next_action");
+                if (fakeAle) {
+                    nextAction = ale.getInt("next_action");
+                } else {
+                    nextAction = epsilonGreedy(Qnext,episode);
+                }
             }
             else{
                 nextAction = 0;
@@ -355,7 +371,7 @@ void SeqSarsaLearner::learnPolicy(ALEInterface& ale, Features *features) {
                 maxFeatVectorNorm = trueFeatureSize;
                 learningRate = alpha/maxFeatVectorNorm;
             }
-            delta = reward[0] + gamma * Qnext[nextAction] - Q[currentAction];
+            delta = delta + gamma *  Q[greedyAction];
 
             //Update weights vector:
             for(unsigned int a = 0; a < nonZeroElig.size(); a++){
@@ -393,7 +409,7 @@ void SeqSarsaLearner::learnPolicy(ALEInterface& ale, Features *features) {
     }
 }
 
-void SeqSarsaLearner::evaluatePolicy(ALEInterface& ale, Features *features){
+void SeqQLearner::evaluatePolicy(ALEInterface& ale, Features *features){
     double reward = 0;
     double cumReward = 0;
     double prevCumReward = 0;
@@ -446,7 +462,7 @@ void SeqSarsaLearner::evaluatePolicy(ALEInterface& ale, Features *features){
 
 }
 
-void SeqSarsaLearner::groupFeatures(vector<long long>& activeFeatures){
+void SeqQLearner::groupFeatures(vector<long long>& activeFeatures){
     vector<long long> activeGroupIndices;
 
     int newGroup = 0;
@@ -512,7 +528,7 @@ void SeqSarsaLearner::groupFeatures(vector<long long>& activeFeatures){
     }
 }
 
-void SeqSarsaLearner::saveWeightsToFile(string suffix){
+void SeqQLearner::saveWeightsToFile(string suffix){
     std::ofstream weightsFile ((nameWeightsFile + suffix).c_str());
     if(weightsFile.is_open()){
         weightsFile << w.size() << " " << w[0].size() << std::endl;
@@ -530,7 +546,7 @@ void SeqSarsaLearner::saveWeightsToFile(string suffix){
     }
 }
 
-void SeqSarsaLearner::loadWeights(){
+void SeqQLearner::loadWeights(){
     string line;
     int nActions, nFeatures;
     int i, j;
