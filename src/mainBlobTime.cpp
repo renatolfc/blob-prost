@@ -59,6 +59,9 @@ int main(int argc, char** argv){
 	ale.setInt("frame_skip", param.getNumStepsPerAction());
 	ale.setInt("max_num_frames_per_episode", param.getEpisodeLength());
     ale.setBool("color_averaging", true);
+    if (param.isFakeAle()) {
+        ale.setBool("sequential_processing", true);
+    }
 
 	ale.loadROM(param.getRomPath().c_str());
 
